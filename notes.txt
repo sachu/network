@@ -1,0 +1,39 @@
+The port number is used by the kernel to match an incoming packet to a
+certain process's socket descriptor.
+
+Accepting connections:
+  getaddrinfo();
+  socket();
+  bind();
+  listen();
+  accept();
+
+Remember reaping dead child processes in the handler in CS110?
+
+void sigchld_handler(int s)
+{
+    // waitpid() might overwrite errno, so we save and restore it:
+    int saved_errno = errno;
+    while(waitpid(-1, NULL, WNOHANG) > 0);
+    errno = saved_errno;
+}
+
+struct sigaction sa;
+sa.sa_handler = sigchld_handler; // reap all dead processes
+sigemptyset(&sa.sa_mask);
+sa.sa_flags = SA_RESTART;
+if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+    perror("sigaction");
+    exit(1);
+}
+
+
+----
+
+No need for listen() or accept() when using unconnected datagram
+sockets.
+
+----
+
+Default: socket set to BLOCKING. Can use fcntl() to change that and
+poll from socket, but Beej recommends using select().
