@@ -33,7 +33,13 @@ if (sigaction(SIGCHLD, &sa, NULL) == -1) {
 No need for listen() or accept() when using unconnected datagram
 sockets.
 
-----
-
 Default: socket set to BLOCKING. Can use fcntl() to change that and
 poll from socket, but Beej recommends using select().
+
+----
+
+DHCP service dynamically assigns IP addr to the network device and can
+also give the local DNS server.
+
+ARP: Discovery protocol using layer 2 broadcast semantics that ties IP
+back to MAC.
