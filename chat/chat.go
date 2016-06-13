@@ -14,6 +14,7 @@ type Client struct {
 	conn     net.Conn
 	nickname string
 	ch       chan string
+    closed   bool
 }
 
 func main() {
@@ -51,6 +52,9 @@ func (c Client) ReadLinesInto(ch chan<- string) {
 		if err != nil || n == 0 {
 			c.conn.Close()
             // Disconnect logic here
+            c.closed = true
+            ch <- "" // Just a dummy message to trigger client checking if closed.
+                     // Empty string because ch is the global msgchan.
 			break
 		}
         currText += string(buf[:n])
@@ -64,6 +68,9 @@ func (c Client) ReadLinesInto(ch chan<- string) {
 
 func (c Client) WriteLinesFrom(ch <-chan string) {
 	for msg := range ch {
+        if (c.closed) {
+            return
+        }
 		_, err := io.WriteString(c.conn, msg)
 		if err != nil {
 			return
@@ -85,6 +92,7 @@ func handleConnection(c net.Conn, msgchan chan<- string, addchan chan<- Client, 
 		conn:     c,
 		nickname: promptNick(c, bufc),
 		ch:       make(chan string),
+        closed:   false,
 	}
 	if strings.TrimSpace(client.nickname) == "" {
 		io.WriteString(c, "Invalid Username\n")
